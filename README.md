@@ -50,6 +50,8 @@ Más información para crear un usuario y base de datos.
 
 * Dirigirse al home del usuario y buscar la directorio recien creado (Ver Referencias). Buscar el directorio del año de publicación y crear un archivo .zip del mismo. 
 
+###
+
     cd $HOME/Odontología/Articulo/
     zip -r 2013.zip 2013 
 
