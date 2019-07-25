@@ -78,7 +78,7 @@ Las referencias que se muestran a continuación dependerá de cada universidad.
 
 #### Licencia
 
-MMAD está bajo una licencia <a href=./LICENSE.txt">AGPL v3</a>.
+MMAD está bajo una licencia <a href="./LICENSE.txt">AGPL v3</a>.
 
 
 
