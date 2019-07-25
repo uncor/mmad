@@ -8,7 +8,7 @@ MMAD (Módulo para la migración de metadatos y archivos digitales) es una herra
 * Codificarlos en un esquema Dublin Core.
 * Almacenarlos en directorios bien definidos para su migración a repositorios digitales basados en DSpace.
 
-#### Requisitos de instalación
+#### Prerrequisitos de Instalación
 
 MMAD es una herramienta desarrollada en Perl, por lo tanto es necesario instalar:
 
@@ -21,7 +21,7 @@ Más información para crear un usuario y base de datos.
 * Crear usuario: https://dev.mysql.com/doc/refman/5.7/en/create-user.html
 * Crear base de datos: https://dev.mysql.com/doc/refman/5.7/en/creating-database.html
 
-#### Instalación
+#### Funcionamiento
 
 * Clonar el repositorio
 
