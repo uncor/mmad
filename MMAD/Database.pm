@@ -3,22 +3,27 @@ package MMAD::Database;
 use Modern::Perl;
 
 use DBI;
+use YAML;
 
-##### MySQL database configuration ##### 
+##### MySQL database configuration #####
 
 sub connect_db {
 
-    my ($driver, $database, $host, $dsn, $userid, $password, $dbh);
+    my ($args) = @_;
 
-    $driver = "mysql";
-    $database = "test";
-    $host = "localhost";
-    $dsn = "DBI:$driver:database=$database:host=$host";
-    $userid = "alexis";
-    $password = "test2019";
-    $dbh = DBI->connect($dsn, $userid, $password, { mysql_enable_utf8 => 1 } ) or die $DBI::errstr;
-    
+    my $config = YAML::LoadFile( '../config.yaml' );
+    my $driver   = $config->{driver};
+    my $database = $config->{database};
+    my $host     = $config->{host};
+    my $userid   = $config->{userid};
+    my $password = $config->{password};
+
+    my $dsn      = "DBI:$driver:database=$database:host=$host";
+
+    my $dbh      = DBI->connect( $dsn, $userid, $password, { mysql_enable_utf8 => 1 } )
+        or die $DBI::errstr;
+
     return $dbh;
-
 }
+
 1;

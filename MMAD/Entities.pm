@@ -2,7 +2,13 @@ package MMAD::Entities;
 
 use Modern::Perl;
 
+use base 'Exporter';
+
 use Switch;
+
+our @EXPORT = (
+    qw( entity )
+);
 
 sub entity{
 

@@ -2,11 +2,17 @@ package MMAD::Types;
 
 use Modern::Perl;
 
+use base 'Exporter';
+
 use MMAD::Database;
 use MMAD::Directory;
 use MMAD::DublinCore;
 use MMAD::Entities;
 use MMAD::Statements;
+
+our @EXPORT = (
+    qw( material_types )
+);
 
 use Switch;
 

@@ -1,0 +1,5 @@
+driver: mysql
+database: test
+host: localhost
+userid: a_user
+password: a_password

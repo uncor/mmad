@@ -2,8 +2,17 @@ package MMAD::DublinCore;
 
 use Modern::Perl;
 
+use base 'Exporter';
+
 use Switch;
 use Encode;
+
+our @EXPORT = (
+    qw( generate_xml
+        lang
+        lang2
+        types )
+);
 
 sub generate_xml {
 

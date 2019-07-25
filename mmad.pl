@@ -13,13 +13,9 @@ use MMAD::Types;
 my ($date, $entity, $type);
 
 my $result = GetOptions(
-    
     'date=s' => \$date,
-    
     'unit=s' => \$entity,
-    
     'type=s' => \$type,
-
 );
 
 # Options 

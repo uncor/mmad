@@ -2,7 +2,13 @@ package MMAD::Statements;
 
 use Modern::Perl;
 
+use base 'Exporter';
+
 use Switch;
+
+our @EXPORT = (
+    qw( check_type )
+);
 
 ##### Queries #####
 
