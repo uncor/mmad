@@ -2,6 +2,12 @@ package MMAD::Database;
 
 use Modern::Perl;
 
+use base 'Exporter';
+
+our @EXPORT = (
+    qw( connect_db )
+);
+
 use DBI;
 use YAML;
 
@@ -11,7 +17,7 @@ sub connect_db {
 
     my ($args) = @_;
 
-    my $config = YAML::LoadFile( '../config.yaml' );
+    my $config = YAML::LoadFile( 'config.yaml' );
     my $driver   = $config->{driver};
     my $database = $config->{database};
     my $host     = $config->{host};
