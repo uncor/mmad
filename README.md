@@ -1,4 +1,4 @@
-# Módulo de Migración de Datos
+    # Módulo de Migración de Datos
 
 #### Descripción
 
@@ -48,7 +48,7 @@ Más información para crear un usuario y base de datos.
 
     perl [mmad-src]/mmad.pl --date [arg1] --unit [arg2] --type [arg3]
 
-* Dirigirse al home del usuario y buscar la directorio recien creado (Ver Referencias). Buscar el directorio del año de publicación y crear un archivo .zip del mismo. 
+* Dirigirse al home del usuario y buscar la directorio recien creado (ver Datos de referencia). Buscar el directorio del año de publicación y crear un archivo .zip del mismo. 
 
 ###
 
@@ -62,7 +62,7 @@ Más información sobre DSpace:
 * Documentación de DSpace: https://wiki.duraspace.org/display/DSDOC5x/DSpace+5.x+Documentation 
 * Importar y Exportar: https://wiki.duraspace.org/display/DSDOC5x/Importing+and+Exporting+Items+via+Simple+Archive+Format
 
-#### Referencias
+#### Datos de referencia
 
 Las referencias que se muestran a continuación dependerá de cada universidad. 
 
@@ -75,6 +75,10 @@ Las referencias que se muestran a continuación dependerá de cada universidad.
     * 3 = conferencia 
     * 4 = capítulo de libro  
     * 5 = tesis
+
+#### Licencia
+
+MMAD está bajo una licencia <a href=./LICENSE.txt">AGPL v3</a>.
 
 
 
