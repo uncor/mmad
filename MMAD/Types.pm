@@ -7,7 +7,6 @@ use base 'Exporter';
 use MMAD::Database;
 use MMAD::Directory;
 use MMAD::DublinCore;
-use MMAD::Entities;
 use MMAD::Statements;
 
 our @EXPORT = (
@@ -32,15 +31,9 @@ sub material_types{
 
         while( my $row = $sth->fetchrow_hashref ){
 
-            my ($fh, $unit_case, $xml);
+            my ($fh, $xml);
             
-            my $id = $row->{'Produccion'},
-            my $type = $row->{'Tipo'};
-            my $link = $row->{'Link'},
-            
-            $unit_case = entity($entity);
-
-            $fh = create_directory( $id, $type, $link, $date, $unit_case );
+            $fh = create_directory($row);
 
             $xml = generate_xml($row);
 
