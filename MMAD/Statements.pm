@@ -10,10 +10,6 @@ our @EXPORT = (
     qw( check_type )
 );
 
-##### Queries #####
-
-# Articles
-
 sub check_type {
     
     my ($type, $date, $unit) = @_;
@@ -25,8 +21,8 @@ sub check_type {
         case 1 { $stmt = "SELECT p.id AS Produccion, p.produccion AS Titulo, i.idioma AS Idioma, tp.tipo_produccion AS Tipo, 
                           a.link_archivo_fulltext AS Link, a.volumen AS Volumen, a.tomo AS Tomo, a.numero AS Numero, a.pagina_inicial AS Pagina_Inicial,
                           a.pagina_final AS Pagina_Final, a.web AS URL, a.doi AS DOI, tr.tipo_referato AS Referato, a.publicado AS Publicado, a.issn AS ISSN, a.eissn AS EISSN, a.editorial AS Editorial,
-                          ps.pais AS Pais_Edicion, a.lugar_edicion AS Ciudad_Edicion, a.anio_publica AS Anio_Publicacion, 
-                          concat(per.apellido,', ',per.nombre) AS Creador, pc.palabra_clave AS Palabra_Clave, a.resumen AS Resumen, u.unidad AS Unidad,
+                          ps.pais AS Pais_Edicion, a.lugar_edicion AS Ciudad_Edicion, a.anio_publica AS Fecha_Publicacion, 
+                          concat(per.apellido,', ',per.nombre) AS Creador, pc.palabra_clave AS Palabra_Clave, a.resumen AS Resumen, u.id AS Codigo, u.unidad AS Unidad,
                           cd.campo_disciplinar AS Areas_del_Conocimiento, a.revista AS Revista
                           from test.PERSONA per
                           INNER JOIN test.PRODUCCION p ON per.id = p.persona_id
@@ -49,8 +45,8 @@ sub check_type {
         case 2 { $stmt = "SELECT p.id AS Produccion, p.produccion AS Titulo, i.idioma AS Idioma, l.link_archivo_fulltext AS Link, tp.tipo_produccion AS Tipo, 
                           l.cantidad_volumenes AS Cantidad_Volumenes, l.total_paginas_libro AS Cantidad_Paginas, l.isbn AS ISBN, 
                           ps.pais AS Pais_Edicion, l.lugar_edicion AS Ciudad_Edicion, l.publicado AS Estado, l.referato AS Referato, 
-                          l.editorial AS Editorial, l.anio_publica AS Anio_Publicacion, l.web AS URL, 
-                          concat(per.apellido,', ',per.nombre) AS Creador, pc.palabra_clave AS Palabra_Clave, l.resumen AS Resumen, u.unidad AS Unidad
+                          l.editorial AS Editorial, l.anio_publica AS Fecha_Publicacion, l.web AS URL, 
+                          concat(per.apellido,', ',per.nombre) AS Creador, pc.palabra_clave AS Palabra_Clave, l.resumen AS Resumen, u.id AS Codigo, u.unidad AS Unidad
                           from test.PERSONA per
                           INNER JOIN test.PRODUCCION p ON per.id = p.persona_id
                           INNER JOIN test.PR_LIBRO l ON l.produccion_id = p.id
@@ -70,8 +66,8 @@ sub check_type {
                           cl.link_archivo_fulltext AS Link, cl.numero AS Numero, cl.pagina_inicial AS Pagina_Inicial, cl.pagina_final AS Pagina_Final,
                           cl.isbn AS ISBN, cl.titulo_libro AS Titulo_Libro, cl.tomo AS Tomo, cl.total_paginas_libro AS Total_Paginas, cl.volumen AS Volumen, 
                           ps.pais AS Pais_Edicion, cl.lugar_edicion AS Ciudad_Edicion, cl.publicado AS Estado, cl.referato AS Referato, 
-                          cl.editorial AS Editorial, cl.anio_publica AS Anio_Publicacion, cl.web AS URL, 
-                          concat(per.apellido,', ',per.nombre) AS Creador, pc.palabra_clave AS Palabra_Clave, cl.resumen AS Resumen, u.unidad AS Unidad,
+                          cl.editorial AS Editorial, cl.anio_publica AS Fecha_Publicacion, cl.web AS URL, 
+                          concat(per.apellido,', ',per.nombre) AS Creador, pc.palabra_clave AS Palabra_Clave, cl.resumen AS Resumen, u.id AS Codigo, u.unidad AS Unidad,
                           cd.campo_disciplinar AS Areas_del_Conocimiento
                           from test.PERSONA per
                           INNER JOIN test.PRODUCCION p ON per.id = p.persona_id
@@ -97,7 +93,7 @@ sub check_type {
                           tr.tipo_reunion AS Tipo_Evento, ps.pais AS Pais_Evento, c.lugar_reunion AS Ciudad_Evento, 
                           c.anio_reunion AS Fecha_Evento, c.institucion_organizadora AS Instituticion_Organizadora, 
                           concat(per.apellido,', ',per.nombre) AS Creador, pc.palabra_clave AS Palabra_Clave, c.resumen AS Resumen,
-                          u.unidad AS Unidad
+                          u.id AS Codigo, u.unidad AS Unidad
                           from test.PERSONA per
                           INNER JOIN test.PRODUCCION p ON per.id = p.persona_id
                           INNER JOIN test.PR_CONGRESO c ON c.produccion_id = p.id
@@ -119,7 +115,7 @@ sub check_type {
         case 5 { $stmt = "SELECT p.id AS Produccion, pc.palabra_clave AS Palabra_Clave, p.produccion AS Titulo, t.resumen AS Resumen, 
                           concat(per.apellido, ', ', per.nombre) AS Creador, t.web AS URL,
                           i.idioma AS Idioma, tp.tipo_produccion AS Tipo, t.anio AS Fecha_Publicacion, 
-                          ga.grado_academico AS Grado, t.link_archivo_fulltext AS Link, u.id,
+                          ga.grado_academico AS Grado, t.link_archivo_fulltext AS Link, u.id AS Codigo,
                           u.unidad AS Unidad
                           FROM test.PERSONA per 
                           INNER JOIN test.PRODUCCION p ON per.id = p.persona_id
