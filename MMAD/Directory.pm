@@ -4,6 +4,8 @@ use Modern::Perl;
 
 use base 'Exporter';
 
+use MMAD::Entities;
+
 use File::Copy;
 use File::Fetch;
 use Encode;
@@ -15,61 +17,54 @@ our @EXPORT = (
 
 sub create_directory {
 
-    my ( $id, $type, $link, $date, $unit_case ) = @_;
+    my ($row) = @_;
 
-    my $HOME = $ENV{'HOME'};
+    my $id      = $row->{'Produccion'};
+    my $type    = $row->{'Tipo'};
+    my $link    = $row->{'Link'};
+    my $code    = $row->{'Codigo'};
+    my $date    = $row->{'Fecha_Publicacion'};
+    
+    my $config  = YAML::LoadFile('config.yaml');
+    my $home    = $config->{home};
+    my $source  = $config->{src};
+    my $license = $config->{license};
+    
+    # Folders
 
-    my $folder1 = "$HOME/$unit_case";
+    my $unity = entity($code);
 
-    my ( $folder2, $folder3, $folder4 );
+    my $unity_dir = "$home/$unity";
+    my $type_dir  = "$unity_dir/$type";
+    my $date_dir  = "$type_dir/$date";
+    my $item_dir  = "$date_dir/item_$id";
 
-    my $src = "$HOME/mmd/mmd-src/default.license";
-
-    my $url = "file:///media/alexis/Toshiba_Ext/$link";
-
-    $folder2 = "$folder1/$type";
-
-    $folder3 = "$folder2/$date";
-
-    $folder4 = "$folder3/item_$id";
-
-    # Node directory
-
-    unless ( mkdir( $folder1, 0755 ) ) {
+    unless ( mkdir( $unity_dir, 0755 ) ) {
     }
+        unless ( mkdir( $type_dir, 0755 ) ) {
+        }
+            unless ( mkdir( $date_dir, 0755 ) ) {
+            }
+                unless ( mkdir( $item_dir, 0755 ) ) {
+                }
 
-    # Type
-
-    unless ( mkdir( $folder2, 0755 ) ) {
-    }
-
-    # Date
-
-    unless ( mkdir( $folder3, 0755 ) ) {
-    }
-
-    # Item
-
-    unless ( mkdir( $folder4, 0755 ) ) {
-    }
-
-    open( my $fh, ">:encoding(UTF-8)", "$folder4/dublin_core.xml" )
+    open( my $fh, ">:encoding(UTF-8)", "$item_dir/dublin_core.xml" )
         or die "Can't save > dublin_core.xml: $!";
 
     # License txt
 
-    copy( "$src", "$folder4/license.txt" )
+    copy( "$license", "$item_dir/license.txt" )
         or die "Copy failed: $!";
 
     # File content from URL or localhost
 
-    #my $url = "https://sigeva.unc.edu.ar/eva/archivosAdjuntos.do?archivo=$link";
+    my $src = "$source/$link";
 
-    my $ff        = File::Fetch->new( uri => $url );
-    my $file      = $ff->fetch( to => "$folder4/" );
+    my $ff        = File::Fetch->new( uri => $src );
+    my $file      = $ff->fetch( to => "$item_dir/" );
     my $file_name = $ff->file;
 
-    create_content( $folder4, $file_name );
+    create_content( $item_dir, $file_name );
 
     return $fh;
 
@@ -80,8 +75,7 @@ sub create_content {
     my ( $folder, $file ) = @_;
 
     my $original = "$file\tbundle:ORIGINAL\n";
-
-    my $license = "license.txt\tbundle:LICENSE\n";
+    my $license  = "license.txt\tbundle:LICENSE\n";
 
     open( my $contents, ">", "$folder/contents" )
         or die "Can't save > content: $!";
