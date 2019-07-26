@@ -8,545 +8,495 @@ use Switch;
 use Encode;
 
 our @EXPORT = (
-    qw( generate_xml
-        lang
-        lang2
-        types )
+	qw( generate_xml
+		lang
+		lang2
+		types )
 );
 
 sub generate_xml {
 
-    my ($row) = @_;
+	my ($row) = @_;
 
-    my $id             = $row->{'Produccion'};
-    my $title          = $row->{'Titulo'};
-    my $abstract       = $row->{'Resumen'};
-    my $creator        = $row->{'Creador'};
-    my $subject        = $row->{'Palabra_Clave'};
-    my $language       = $row->{'Idioma'};
-    my $type           = $row->{'Tipo'};
-    my $date           = $row->{'Fecha_Publicacion'};
-    my $description    = $row->{'Unidad'};
-    my $link           = $row->{'Link'};
-    my $academic_grade = $row->{'Grado'};
-    my $advisor        = $row->{'Director'};
-    my $url            = $row->{'URL'};
+	my $id             = $row->{'Produccion'};
+	my $title          = $row->{'Titulo'};
+	my $abstract       = $row->{'Resumen'};
+	my $creator        = $row->{'Creador'};
+	my $subject        = $row->{'Palabra_Clave'}; #### Acumular palabras claves y separar por ";" ####
+	my $language       = $row->{'Idioma'};
+	my $type           = $row->{'Tipo'};
+	my $date           = $row->{'Fecha_Publicacion'};
+	my $description    = $row->{'Unidad'};
+	my $link           = $row->{'Link'};
+	my $academic_grade = $row->{'Grado'};
+	my $advisor        = $row->{'Director'};
+	my $url            = $row->{'URL'};
+	
+	my $desc = "Fil: " . $creator . ". Universidad Nacional de Cordoba. " . $description . ". Cordoba. Argentina.";
 
-    my $desc
-        = "Fil: "
-        . $creator
-        . ". Universidad Nacional de Cordoba. "
-        . $description
-        . ". Cordoba. Argentina.";
+	# Creative Commons
 
-    # Creative Commons
+	my ( $rights, $rights_uri );
 
-    my ( $rights, $rights_uri );
+	$rights     = "Attribution-NonCommercial-ShareAlike 4.0 International";
+	$rights_uri = "https://creativecommons.org/licenses/by-nc-sa/4.0/";
 
-    $rights     = "Attribution-NonCommercial-ShareAlike 4.0 International";
-    $rights_uri = "https://creativecommons.org/licenses/by-nc-sa/4.0/";
+	# Encode language
 
-    # Encode language
+	my $l = encode( "utf-8", $language );
 
-    my $l = encode( "utf-8", $language );
+	my $lang = lang($l);
 
-    my $lang = lang($l);
+	# Transformers
 
-    # Transformers
+	my $t = types($type);
 
-    my $t = types($type);
+	my $lang2 = lang2($lang);
 
-    my $lang2 = lang2($lang);
+	# Dublin Core XML
 
-    # Dublin Core XML
+	my $dc = XML::Writer->new(
+		OUTPUT      => 'self',
+		DATA_MODE   => 1,
+		DATA_INDENT => 2,
+	);
 
-    my $dc = XML::Writer->new(
-        OUTPUT      => 'self',
-        DATA_MODE   => 1,
-        DATA_INDENT => 2,
-    );
+	$dc->xmlDecl( 'UTF-8', 'no' );
+	$dc->startTag( 'dublin_core', schema => 'dc' );
 
-    $dc->xmlDecl( 'UTF-8', 'no' );
-    $dc->startTag( 'dublin_core', schema => 'dc' );
+	# Abstract
 
-    # Abstract
+	$dc->startTag( 'dcvalue', element   => 'description', qualifier => 'abstract', language  => $lang2 );
+	$dc->characters($abstract);
+	$dc->endTag('dcvalue');
 
-    $dc->startTag(
-        'dcvalue',
-        element   => 'description',
-        qualifier => 'abstract',
-        language  => $lang2
-    );
-    $dc->characters($abstract);
-    $dc->endTag('dcvalue');
+	# Creative Commons (License)
 
-    # Creative Commons (License)
+	$dc->startTag( 'dcvalue', element => 'rights', qualifier => 'none', language => '*' );
+	$dc->characters($rights);
+	$dc->endTag;
 
-    $dc->startTag( 'dcvalue', element => 'rights', qualifier => 'none', language => '*' );
-    $dc->characters($rights);
-    $dc->endTag;
+	$dc->startTag( 'dcvalue', element => 'rights', qualifier => 'uri', language => '*' );
+	$dc->characters($rights_uri);
+	$dc->endTag;
 
-    $dc->startTag( 'dcvalue', element => 'rights', qualifier => 'uri', language => '*' );
-    $dc->characters($rights_uri);
-    $dc->endTag;
+	# Creator
 
-    # Creator
+	$dc->startTag( 'dcvalue', element => 'contributor', qualifier => 'author', language => '' );
+	$dc->characters($creator);
+	$dc->endTag('dcvalue');
 
-    $dc->startTag( 'dcvalue', element => 'contributor', qualifier => 'author', language => '' );
-    $dc->characters($creator);
-    $dc->endTag('dcvalue');
+	# Advisor
 
-    # Advisor
+	$dc->startTag( 'dcvalue', element => 'contributor', qualifier => 'advisor', language => '' );
+	$dc->characters($advisor);
+	$dc->endTag('dcvalue');
 
-    $dc->startTag( 'dcvalue', element => 'contributor', qualifier => 'advisor', language => '' );
-    $dc->characters($advisor);
-    $dc->endTag('dcvalue');
+	# Date
 
-    # Date
+	$dc->startTag( 'dcvalue', element => 'date', qualifier => 'issued', language => '' );
+	$dc->characters($date);
+	$dc->endTag('dcvalue');
 
-    $dc->startTag( 'dcvalue', element => 'date', qualifier => 'issued', language => '' );
-    $dc->characters($date);
-    $dc->endTag('dcvalue');
+	# Filiation
 
-    # Filiation
+	$dc->startTag( 'dcvalue', element => 'description', qualifier => 'fil', language => $lang2 );
+	$dc->characters($desc);
+	$dc->endTag('dcvalue');
 
-    $dc->startTag( 'dcvalue', element => 'description', qualifier => 'fil', language => $lang2 );
-    $dc->characters($desc);
-    $dc->endTag('dcvalue');
+	# Language
 
-    # Language
+	$dc->startTag( 'dcvalue', element => 'language', qualifier => 'iso', language => $lang2 );
+	$dc->characters($lang);
+	$dc->endTag('dcvalue');
 
-    $dc->startTag( 'dcvalue', element => 'language', qualifier => 'iso', language => $lang2 );
-    $dc->characters($lang);
-    $dc->endTag('dcvalue');
+	# Publisher
 
-    # Publisher
+	$dc->startTag( 'dcvalue', element => 'publisher', qualifier => 'none', language => '' );
+	$dc->characters( my $publisher );
+	$dc->endTag('dcvalue');
 
-    $dc->startTag( 'dcvalue', element => 'publisher', qualifier => 'none', language => '' );
-    $dc->characters( my $publisher );
-    $dc->endTag('dcvalue');
+	# Subject
 
-    # Subject
+	$dc->startTag( 'dcvalue', element => 'subject', qualifier => 'none', language => $lang2 );
+	$dc->characters($subject);
+	$dc->endTag('dcvalue');
 
-    $dc->startTag( 'dcvalue', element => 'subject', qualifier => 'none', language => $lang2 );
-    $dc->characters($subject);
-    $dc->endTag('dcvalue');
+	# Title
 
-    # Title
+	$dc->startTag( 'dcvalue', element => 'title', qualifier => 'none', language => $lang2 );
+	$dc->characters($title);
+	$dc->endTag('dcvalue');
 
-    $dc->startTag( 'dcvalue', element => 'title', qualifier => 'none', language => $lang2 );
-    $dc->characters($title);
-    $dc->endTag('dcvalue');
+	# Type
 
-    # Type
+	$dc->startTag( 'dcvalue', element => 'type', qualifier => 'none', language => $lang2 );
+	$dc->characters($t);
+	$dc->endTag('dcvalue');
 
-    $dc->startTag( 'dcvalue', element => 'type', qualifier => 'none', language => $lang2 );
-    $dc->characters($t);
-    $dc->endTag('dcvalue');
+	# Version
 
-    # Version
+	$dc->startTag( 'dcvalue', element => 'description', qualifier => 'version', language => '' );
+	$dc->characters('publishedVersion');
+	$dc->endTag('dcvalue');
 
-    $dc->startTag( 'dcvalue', element => 'description', qualifier => 'version', language => '' );
-    $dc->characters('publishedVersion');
-    $dc->endTag('dcvalue');
+	# URL
 
-    # URL
+	$dc->startTag( 'dcvalue', element => 'url', qualifier => '', language => '' );
+	$dc->characters($url);
+	$dc->endTag('dcvalue');
 
-    $dc->startTag( 'dcvalue', element => 'url', qualifier => '', language => '' );
-    $dc->characters($url);
-    $dc->endTag('dcvalue');
+	# Others
 
-    # Others
+	if ( $type eq ("Articulo") ) {
 
-    if ( $type eq ("Articulo") ) {
+		my $volume             = $row->{'Volumen'};
+		my $tome               = $row->{'Tomo'};
+		my $first_page         = $row->{'Pagina_Inicial'};
+		my $last_page          = $row->{'Pagina_Final'};
+		my $doi                = $row->{'DOI'};
+		my $issn               = $row->{'ISSN'};
+		my $eissn              = $row->{'EISSN'};
+		my $referato           = $row->{'Referato'};
+		my $country            = $row->{'Pais_Edicion'};
+		my $city               = $row->{'Ciudad_Edicion'};
+		my $disciplinary_field = $row->{'Areas_del_Conocimiento'};
+		my $magazine           = $row->{'Revista'};
 
-        my $volume             = $row->{'Volumen'};
-        my $tome               = $row->{'Tomo'};
-        my $first_page         = $row->{'Pagina_Inicial'};
-        my $last_page          = $row->{'Pagina_Final'};
-        my $doi                = $row->{'DOI'};
-        my $issn               = $row->{'ISSN'};
-        my $eissn              = $row->{'EISSN'};
-        my $referato           = $row->{'Referato'};
-        my $country            = $row->{'Pais_Edicion'};
-        my $city               = $row->{'Ciudad_Edicion'};
-        my $disciplinary_field = $row->{'Areas_del_Conocimiento'};
-        my $magazine           = $row->{'Revista'};
+		my $pagination;
 
-        my $pagination;
+		if ( $first_page && $last_page ) {
+			$pagination = $first_page . "-" . $last_page;
+		}
 
-        if ( $first_page && $last_page ) {
-            $pagination = $first_page . "-" . $last_page;
-        }
+		# Volume
 
-        # Volume
+		$dc->startTag( 'dcvalue', element => 'journal', qualifier => 'volume', language => '' );
+		$dc->characters($volume);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'journal', qualifier => 'volume', language => '' );
-        $dc->characters($volume);
-        $dc->endTag('dcvalue');
+		# Tome
 
-        # Tome
+		$dc->startTag( 'dcvalue', element => 'journal', qualifier => 'tome', language => '' );
+		$dc->characters($tome);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'journal', qualifier => 'tome', language => '' );
-        $dc->characters($tome);
-        $dc->endTag('dcvalue');
+		# Pagination
 
-        # Pagination
+		$dc->startTag( 'dcvalue', element => 'journal', qualifier => 'pagination', language => '' );
+		$dc->characters($pagination);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'journal', qualifier => 'pagination', language => '' );
-        $dc->characters($pagination);
-        $dc->endTag('dcvalue');
+		# EISSN
 
-        # EISSN
+		$dc->startTag( 'dcvalue', element => 'identifier', qualifier => 'eissn', language => '' );
+		$dc->characters($eissn);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'identifier', qualifier => 'eissn', language => '' );
-        $dc->characters($eissn);
-        $dc->endTag('dcvalue');
+		# ISSN
 
-        # ISSN
+		$dc->startTag( 'dcvalue', element => 'identifier', qualifier => 'issn', language => '' );
+		$dc->characters($issn);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'identifier', qualifier => 'issn', language => '' );
-        $dc->characters($issn);
-        $dc->endTag('dcvalue');
+		# Magazine
 
-        # Magazine
+		$dc->startTag( 'dcvalue', element => 'journal', qualifier => 'title', language => '' );
+		$dc->characters($magazine);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'journal', qualifier => 'title', language => '' );
-        $dc->characters($magazine);
-        $dc->endTag('dcvalue');
+		# Edition country
 
-        # Edition country
+		$dc->startTag( 'dcvalue', element => 'journal', qualifier => 'country', language => '' );
+		$dc->characters($country);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'journal', qualifier => 'country', language => '' );
-        $dc->characters($country);
-        $dc->endTag('dcvalue');
+		# Edition city
 
-        # Edition city
+		$dc->startTag( 'dcvalue', element => 'journal', qualifier => 'city', language => '' );
+		$dc->characters($city);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'journal', qualifier => 'city', language => '' );
-        $dc->characters($city);
-        $dc->endTag('dcvalue');
+		# DOI
 
-        # DOI
+		$dc->startTag( 'dcvalue', element => 'doi', qualifier => '', language => '' );
+		$dc->characters($doi);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'doi', qualifier => '', language => '' );
-        $dc->characters($doi);
-        $dc->endTag('dcvalue');
+	}
 
-    }
+	if ( $type eq ("Libro") ) {
 
-    if ( $type eq ("Libro") ) {
+		my $volumes   = $row->{'Cantidad_Volumenes'},
+		my $pages     = $row->{'Cantidad_Paginas'},
+		my $isbn      = $row->{'ISBN'},
+		my $country   = $row->{'Pais_Edicion'},
+		my $city      = $row->{'Ciudad_Edicion'},
+		my $editorial = $row->{'Editorial'};
 
-        my $volumes       = $row->{'Cantidad_Volumenes'},
-            my $pages     = $row->{'Cantidad_Paginas'},
-            my $isbn      = $row->{'ISBN'},
-            my $country   = $row->{'Pais_Edicion'},
-            my $city      = $row->{'Ciudad_Edicion'},
-            my $editorial = $row->{'Editorial'};
+		# Total volumes
 
-        # Total volumes
+		$dc->startTag( 'dcvalue', element => 'book', qualifier => 'volumes', language => '' );
+		$dc->characters($volumes);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'book', qualifier => 'volumes', language => '' );
-        $dc->characters($volumes);
-        $dc->endTag('dcvalue');
+		# Pages
 
-        # Pages
+		$dc->startTag( 'dcvalue', element => 'book', qualifier => 'pages', language => '' );
+		$dc->characters($pages);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'book', qualifier => 'pages', language => '' );
-        $dc->characters($pages);
-        $dc->endTag('dcvalue');
+		# Edition country
 
-        # Edition country
+		$dc->startTag( 'dcvalue', element => 'book', qualifier => 'country', language => '' );
+		$dc->characters($country);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'book', qualifier => 'country', language => '' );
-        $dc->characters($country);
-        $dc->endTag('dcvalue');
+		# Edition city
 
-        # Edition city
+		$dc->startTag( 'dcvalue', element => 'book', qualifier => 'city', language => '' );
+		$dc->characters($city);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'book', qualifier => 'city', language => '' );
-        $dc->characters($city);
-        $dc->endTag('dcvalue');
+		# Editorial
 
-        # Editorial
+		$dc->startTag( 'dcvalue', element => 'book', qualifier => 'editorial', language => '' );
+		$dc->characters($editorial);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'book', qualifier => 'editorial', language => '' );
-        $dc->characters($editorial);
-        $dc->endTag('dcvalue');
+		# ISBN
 
-        # ISBN
+		$dc->startTag( 'dcvalue', element => 'identifier', qualifier => 'isbn', language => '' );
+		$dc->characters($isbn);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'identifier', qualifier => 'isbn', language => '' );
-        $dc->characters($isbn);
-        $dc->endTag('dcvalue');
+	}
 
-    }
+	if ( $type eq ("Capitulo de Libro") ) {
 
-    if ( $type eq ("Capitulo de Libro") ) {
+		my $volume      = $row->{'Volumen'},
+		my $number      = $row->{'Numero'},
+		my $first_page  = $row->{'Pagina_Inicial'},
+		my $last_page   = $row->{'Pagina_Final'},
+		my $isbn        = $row->{'ISBN'},
+		my $other_title = $row->{'Titulo_Libro'},
+		my $tome        = $row->{'Tomo'},
+		my $pages       = $row->{'Total_Paginas'},
+		my $country     = $row->{'Pais_Edicion'},
+		my $city        = $row->{'Ciudad_Edicion'},
+		my $editorial   = $row->{'Editorial'};
 
-        my $volume          = $row->{'Volumen'},
-            my $number      = $row->{'Numero'},
-            my $first_page  = $row->{'Pagina_Inicial'},
-            my $last_page   = $row->{'Pagina_Final'},
-            my $isbn        = $row->{'ISBN'},
-            my $other_title = $row->{'Titulo_Libro'},
-            my $tome        = $row->{'Tomo'},
-            my $pages       = $row->{'Total_Paginas'},
-            my $country     = $row->{'Pais_Edicion'},
-            my $city        = $row->{'Ciudad_Edicion'},
-            my $editorial   = $row->{'Editorial'};
+		# Alternative title
 
-        # Alternative title
+		$dc->startTag( 'dcvalue', element   => 'title', qualifier => 'alternative', language  => $lang2 );
+		$dc->characters($other_title);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag(
-            'dcvalue',
-            element   => 'title',
-            qualifier => 'alternative',
-            language  => $lang2
-        );
-        $dc->characters($other_title);
-        $dc->endTag('dcvalue');
+		# Volume
 
-        # Volume
+		$dc->startTag( 'dcvalue', element => 'book', qualifier => 'volume', language => '' );
+		$dc->characters($volume);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'book', qualifier => 'volume', language => '' );
-        $dc->characters($volume);
-        $dc->endTag('dcvalue');
+		# Tome
 
-        # Tome
+		$dc->startTag( 'dcvalue', element => 'book', qualifier => 'tome', language => '' );
+		$dc->characters($tome);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'book', qualifier => 'tome', language => '' );
-        $dc->characters($tome);
-        $dc->endTag('dcvalue');
+		# Number
 
-        # Number
+		$dc->startTag( 'dcvalue', element => 'book', qualifier => 'number', language => '' );
+		$dc->characters($number);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'book', qualifier => 'number', language => '' );
-        $dc->characters($number);
-        $dc->endTag('dcvalue');
+		# First page
 
-        # First page
+		$dc->startTag( 'dcvalue', element => 'book', qualifier => 'firstpage', language => '' );
+		$dc->characters($first_page);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'book', qualifier => 'firstpage', language => '' );
-        $dc->characters($first_page);
-        $dc->endTag('dcvalue');
+		# Last page
 
-        # Last page
+		$dc->startTag( 'dcvalue', element => 'book', qualifier => 'lastpage', language => '' );
+		$dc->characters($last_page);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'book', qualifier => 'lastpage', language => '' );
-        $dc->characters($last_page);
-        $dc->endTag('dcvalue');
+		# Pages
 
-        # Pages
+		$dc->startTag( 'dcvalue', element => 'book', qualifier => 'pages', language => '' );
+		$dc->characters($pages);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'book', qualifier => 'pages', language => '' );
-        $dc->characters($pages);
-        $dc->endTag('dcvalue');
+		# Edition country
 
-        # Edition country
+		$dc->startTag( 'dcvalue', element => 'book', qualifier => 'country', language => '' );
+		$dc->characters($country);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'book', qualifier => 'country', language => '' );
-        $dc->characters($country);
-        $dc->endTag('dcvalue');
+		# Edition city
 
-        # Edition city
+		$dc->startTag( 'dcvalue', element => 'book', qualifier => 'city', language => '' );
+		$dc->characters($city);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'book', qualifier => 'city', language => '' );
-        $dc->characters($city);
-        $dc->endTag('dcvalue');
+		# Editorial
 
-        # Editorial
+		$dc->startTag( 'dcvalue', element => 'book', qualifier => 'editorial', language => '' );
+		$dc->characters($editorial);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'book', qualifier => 'editorial', language => '' );
-        $dc->characters($editorial);
-        $dc->endTag('dcvalue');
+		# ISBN
 
-        # ISBN
+		$dc->startTag( 'dcvalue', element => 'identifier', qualifier => 'isbn', language => '' );
+		$dc->characters($isbn);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'identifier', qualifier => 'isbn', language => '' );
-        $dc->characters($isbn);
-        $dc->endTag('dcvalue');
+	}
 
-    }
+	if ( $type eq ("Congreso") ) {
 
-    if ( $type eq ("Congreso") ) {
+		my $publication_type = $row->{'Tipo_Publicacion'};
+		my $work_type        = $row->{'Tipo_Trabajo'};
+		my $magazine         = $row->{'Revista'};
+		my $country          = $row->{'Pais_Edicion'};
+		my $city             = $row->{'Ciudad_Edicion'};
+		my $editorial        = $row->{'Editorial'};
+		my $event            = $row->{'Evento'};
+		my $event_type       = $row->{'Tipo_Evento'};
+		my $event_country    = $row->{'Pais_Evento'};
+		my $event_city       = $row->{'Ciudad_Evento'};
+		my $event_date       = $row->{'Fecha_Evento'};
+		my $institution      = $row->{'Institucion_Organizadora'};
 
-        my $publication_type = $row->{'Tipo_Publicacion'};
-        my $work_type        = $row->{'Tipo_Trabajo'};
-        my $magazine         = $row->{'Revista'};
-        my $country          = $row->{'Pais_Edicion'};
-        my $city             = $row->{'Ciudad_Edicion'};
-        my $editorial        = $row->{'Editorial'};
-        my $event            = $row->{'Evento'};
-        my $event_type       = $row->{'Tipo_Evento'};
-        my $event_country    = $row->{'Pais_Evento'};
-        my $event_city       = $row->{'Ciudad_Evento'};
-        my $event_date       = $row->{'Fecha_Evento'};
-        my $institution      = $row->{'Institucion_Organizadora'};
+		# Publication type
 
-        # Publication type
+		$dc->startTag( 'dcvalue', element   => 'conference', qualifier => 'publication', language  => '' );
+		$dc->characters($publication_type);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag(
-            'dcvalue',
-            element   => 'conference',
-            qualifier => 'publication',
-            language  => ''
-        );
-        $dc->characters($publication_type);
-        $dc->endTag('dcvalue');
+		# Work type
 
-        # Work type
+		$dc->startTag( 'dcvalue', element => 'conference', qualifier => 'work', language => '' );
+		$dc->characters($work_type);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'conference', qualifier => 'work', language => '' );
-        $dc->characters($work_type);
-        $dc->endTag('dcvalue');
+		# Magazine
 
-        # Magazine
+		$dc->startTag( 'dcvalue', element   => 'conference', qualifier => 'magazine', language  => '' );
+		$dc->characters($magazine);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag(
-            'dcvalue',
-            element   => 'conference',
-            qualifier => 'magazine',
-            language  => ''
-        );
-        $dc->characters($magazine);
-        $dc->endTag('dcvalue');
+		# Edition country
 
-        # Edition country
+		$dc->startTag( 'dcvalue', element => 'conference', qualifier => 'country', language => '' );
+		$dc->characters($country);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'conference', qualifier => 'country', language => '' );
-        $dc->characters($country);
-        $dc->endTag('dcvalue');
+		# Edition city
 
-        # Edition city
+		$dc->startTag( 'dcvalue', element => 'conference', qualifier => 'city', language => '' );
+		$dc->characters($city);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'conference', qualifier => 'city', language => '' );
-        $dc->characters($city);
-        $dc->endTag('dcvalue');
+		# Editorial
 
-        # Editorial
+		$dc->startTag( 'dcvalue', element   => 'conference', qualifier => 'editorial', language  => '' );
+		$dc->characters($editorial);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag(
-            'dcvalue',
-            element   => 'conference',
-            qualifier => 'editorial',
-            language  => ''
-        );
-        $dc->characters($editorial);
-        $dc->endTag('dcvalue');
+		# Event
 
-        # Event
+		$dc->startTag( 'dcvalue', element => 'conference', qualifier => 'event', language => '' );
+		$dc->characters($event);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag( 'dcvalue', element => 'conference', qualifier => 'event', language => '' );
-        $dc->characters($city);
-        $dc->endTag('dcvalue');
+		# Event country
 
-        # Event country
+		$dc->startTag( 'dcvalue', element   => 'conference', qualifier => 'eventcountry', language  => '' );
+		$dc->characters($event_country);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag(
-            'dcvalue',
-            element   => 'conference',
-            qualifier => 'eventcountry',
-            language  => ''
-        );
-        $dc->characters($event_country);
-        $dc->endTag('dcvalue');
+		# Event city
 
-        # Event city
+		$dc->startTag( 'dcvalue', element   => 'conference', qualifier => 'eventcity', language  => '' );
+		$dc->characters($event_city);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag(
-            'dcvalue',
-            element   => 'conference',
-            qualifier => 'eventcity',
-            language  => ''
-        );
-        $dc->characters($event_city);
-        $dc->endTag('dcvalue');
+		# Event date
 
-        # Event date
+		$dc->startTag( 'dcvalue', element   => 'conference', qualifier => 'eventdate', language  => '' );
+		$dc->characters($event_date);
+		$dc->endTag('dcvalue');
 
-        $dc->startTag(
-            'dcvalue',
-            element   => 'conference',
-            qualifier => 'eventdate',
-            language  => ''
-        );
-        $dc->characters($event_date);
-        $dc->endTag('dcvalue');
+		# Institution
 
-        # Institution
+		$dc->startTag( 'dcvalue', element   => 'conference', qualifier => 'institution', language  => '' );
+		$dc->characters($institution);
+		$dc->endTag('dcvalue');
+	}
 
-        $dc->startTag(
-            'dcvalue',
-            element   => 'conference',
-            qualifier => 'institution',
-            language  => ''
-        );
-        $dc->characters($institution);
-        $dc->endTag('dcvalue');
-    }
+	$dc->endTag('dublin_core');
 
-    $dc->endTag('dublin_core');
+	my $xml = $dc->end();
 
-    my $xml = $dc->end();
-
-    return $xml;
+	return $xml;
 }
 
 sub lang {
 
-    my ($lang) = @_;
+	my ($lang) = @_;
 
-    my $value;
+	my $value;
 
-    switch ($lang) {
+	switch ($lang) {
 
-        case "Español"   { $value = "spa" }
-        case "Inglés"    { $value = "eng" }
-        case "Portugués" { $value = "por" }
-        else              { $value = "" }
+		case "Español"   { $value = "spa" }
+		case "Inglés"    { $value = "eng" }
+		case "Portugués" { $value = "por" }
+		else             { $value = "undefined" }
 
-    }
+	}
 
-    return $value;
+	return $value;
 
 }
 
 sub lang2 {
 
-    my ($lang) = @_;
+	my ($lang) = @_;
 
-    my $value;
+	my $value;
 
-    switch ($lang) {
+	switch ($lang) {
 
-        case "spa" { $value = "es" }
-        case "eng" { $value = "en" }
+		case "spa"	{ $value = "es" }
+		case "eng" 	{ $value = "en" }
+		else 	   	{ $value = "undefined" }
+	}
 
-    }
-
-    return $value;
+	return $value;
 
 }
 
 sub types {
 
-    my ($type) = @_;
+	my ($type) = @_;
 
-    my $value;
+	my $value;
 
-    switch ($type) {
+	switch ($type) {
 
-        case "Articulo"          { $value = "article" }
-        case "Capitulo de Libro" { $value = "bookPart" }
-        case "Conferencia"       { $value = "conferenceObject" }
-        case "Libro"             { $value = "book" }
-        case "Tesis"             { $value = "bachelorThesis" }
-        else                     { $value = "" }
+		case "Articulo"          { $value = "article" }
+		case "Capitulo de Libro" { $value = "bookPart" }
+		case "Conferencia"       { $value = "conferenceObject" }
+		case "Libro"             { $value = "book" }
+		case "Tesis"             { $value = "bachelorThesis" }
+		else                     { $value = "" }
 
-    }
+	}
 
-    return $value;
+	return $value;
 
 }
 
