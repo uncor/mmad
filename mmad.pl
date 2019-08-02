@@ -13,14 +13,18 @@ use MMAD::Types;
 my ($date, $entity, $type);
 
 my $result = GetOptions(
-    'date=s' => \$date,
-    'unit=s' => \$entity,
-    'type=s' => \$type,
+    'date=s'    => \$date,
+    'unity=s'   => \$entity,
+    'type=s'    => \$type,
 );
 
 # Options 
 
-if($date >= 2000 && $date <= 2018){
+    my $config      = YAML::LoadFile( 'config.yaml' );
+    my $first_date  = $config->{first_date};
+    my $last_date   = $config->{last_date};
+
+if($date >= $first_date && $date <= $last_date){
 
     my $ent = entity($entity);
 
@@ -47,8 +51,8 @@ sub color_message{
     switch($type){
         case 1 { $value = "artículos científicos" }
         case 2 { $value = "libros" }
-        case 3 { $value = "congresos" }
-        case 4 { $value = "capítulos de libros" }
+        case 3 { $value = "capítulos de libros" }
+        case 4 { $value = "congresos" }
         case 5 { $value = "tesis" }
         
     }
