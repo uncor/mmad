@@ -6,23 +6,30 @@ use base 'Exporter';
 
 use Switch;
 use Encode;
+use YAML;
 
 our @EXPORT = (
 	qw( generate_xml
 		lang
 		lang2
-		types )
+		types
+		check_status
+		check_role)
 );
 
 sub generate_xml {
 
 	my ($row) = @_;
 
+	my $config   	= YAML::LoadFile( 'config.yaml' );
+	my $rights 		= $config->{cc}; 
+	my $rights_uri 	= $config->{cc_uri};
+
 	my $id             = $row->{'Produccion'};
 	my $title          = $row->{'Titulo'};
 	my $abstract       = $row->{'Resumen'};
 	my $creator        = $row->{'Creador'};
-	my $subject        = $row->{'Palabra_Clave'}; #### Acumular palabras claves y separar por ";" ####
+	my $subject        = $row->{'Palabra_Clave'}; 
 	my $language       = $row->{'Idioma'};
 	my $type           = $row->{'Tipo'};
 	my $date           = $row->{'Fecha_Publicacion'};
@@ -31,15 +38,45 @@ sub generate_xml {
 	my $academic_grade = $row->{'Grado'};
 	my $advisor        = $row->{'Director'};
 	my $url            = $row->{'URL'};
+	my $referato	   = $row->{'Referato'};
+	my $editorial	   = $row->{'Editorial'};
+		
+	my $version;
+	my $ref;
+	my $r;
 	
 	my $desc = "Fil: " . $creator . ". Universidad Nacional de Cordoba. " . $description . ". Cordoba. Argentina.";
 
-	# Creative Commons
+	# Check status
+	
+	if($type eq('Articulo') | $type eq('Capitulo de Libro') | $type eq('Libro')){
+		
+		my $status = $row->{'Estado'};
+		
+		$version = check_status($status);
+		
+	}
+	else{
+		
+		$version = 'publishedVersion';
+	
+	}
 
-	my ( $rights, $rights_uri );
+	# Check role & referato
 
-	$rights     = "Attribution-NonCommercial-ShareAlike 4.0 International";
-	$rights_uri = "https://creativecommons.org/licenses/by-nc-sa/4.0/";
+	if($type eq('Libro') | $type eq('Capitulo de Libro')){
+		
+		my $role = $row->{'Rol'};
+		
+		$role = check_role($role);
+		$ref = check_ref($referato);
+	
+	}
+	else{
+		
+		$ref = $referato;
+	
+	}
 
 	# Encode language
 
@@ -137,13 +174,19 @@ sub generate_xml {
 	# Version
 
 	$dc->startTag( 'dcvalue', element => 'description', qualifier => 'version', language => '' );
-	$dc->characters('publishedVersion');
+	$dc->characters($version);
 	$dc->endTag('dcvalue');
 
 	# URL
 
 	$dc->startTag( 'dcvalue', element => 'url', qualifier => '', language => '' );
 	$dc->characters($url);
+	$dc->endTag('dcvalue');
+
+	# Referato
+
+	$dc->startTag( 'dcvalue', element => 'journal', qualifier => 'referato', language => '' );
+	$dc->characters($ref);
 	$dc->endTag('dcvalue');
 
 	# Others
@@ -157,12 +200,11 @@ sub generate_xml {
 		my $doi                = $row->{'DOI'};
 		my $issn               = $row->{'ISSN'};
 		my $eissn              = $row->{'EISSN'};
-		my $referato           = $row->{'Referato'};
 		my $country            = $row->{'Pais_Edicion'};
 		my $city               = $row->{'Ciudad_Edicion'};
 		my $disciplinary_field = $row->{'Areas_del_Conocimiento'};
-		my $magazine           = $row->{'Revista'};
-
+		my $journal            = $row->{'Revista'};
+		
 		my $pagination;
 
 		if ( $first_page && $last_page ) {
@@ -199,10 +241,10 @@ sub generate_xml {
 		$dc->characters($issn);
 		$dc->endTag('dcvalue');
 
-		# Magazine
+		# Journal
 
 		$dc->startTag( 'dcvalue', element => 'journal', qualifier => 'title', language => '' );
-		$dc->characters($magazine);
+		$dc->characters($journal);
 		$dc->endTag('dcvalue');
 
 		# Edition country
@@ -219,8 +261,12 @@ sub generate_xml {
 
 		# DOI
 
-		$dc->startTag( 'dcvalue', element => 'doi', qualifier => '', language => '' );
+		$dc->startTag( 'dcvalue', element => 'journal', qualifier => 'doi', language => '' );
 		$dc->characters($doi);
+		$dc->endTag('dcvalue');
+
+		$dc->startTag( 'dcvalue', element => 'journal', qualifier => 'editorial', language => '' );
+		$dc->characters($editorial);
 		$dc->endTag('dcvalue');
 
 	}
@@ -232,7 +278,6 @@ sub generate_xml {
 		my $isbn      = $row->{'ISBN'},
 		my $country   = $row->{'Pais_Edicion'},
 		my $city      = $row->{'Ciudad_Edicion'},
-		my $editorial = $row->{'Editorial'};
 
 		# Total volumes
 
@@ -270,6 +315,12 @@ sub generate_xml {
 		$dc->characters($isbn);
 		$dc->endTag('dcvalue');
 
+		# Role
+
+		$dc->startTag( 'dcvalue', element => 'book', qualifier => 'role', language => '' );
+		$dc->characters($r);
+		$dc->endTag('dcvalue');
+
 	}
 
 	if ( $type eq ("Capitulo de Libro") ) {
@@ -284,7 +335,6 @@ sub generate_xml {
 		my $pages       = $row->{'Total_Paginas'},
 		my $country     = $row->{'Pais_Edicion'},
 		my $city        = $row->{'Ciudad_Edicion'},
-		my $editorial   = $row->{'Editorial'};
 
 		# Alternative title
 
@@ -352,16 +402,21 @@ sub generate_xml {
 		$dc->characters($isbn);
 		$dc->endTag('dcvalue');
 
+		# Role
+
+		$dc->startTag( 'dcvalue', element => 'book', qualifier => 'role', language => '' );
+		$dc->characters($r);
+		$dc->endTag('dcvalue');
+
 	}
 
 	if ( $type eq ("Congreso") ) {
 
 		my $publication_type = $row->{'Tipo_Publicacion'};
 		my $work_type        = $row->{'Tipo_Trabajo'};
-		my $magazine         = $row->{'Revista'};
+		my $journal          = $row->{'Revista'};
 		my $country          = $row->{'Pais_Edicion'};
 		my $city             = $row->{'Ciudad_Edicion'};
-		my $editorial        = $row->{'Editorial'};
 		my $event            = $row->{'Evento'};
 		my $event_type       = $row->{'Tipo_Evento'};
 		my $event_country    = $row->{'Pais_Evento'};
@@ -381,10 +436,10 @@ sub generate_xml {
 		$dc->characters($work_type);
 		$dc->endTag('dcvalue');
 
-		# Magazine
+		# Journal
 
-		$dc->startTag( 'dcvalue', element   => 'conference', qualifier => 'magazine', language  => '' );
-		$dc->characters($magazine);
+		$dc->startTag( 'dcvalue', element   => 'conference', qualifier => 'journal', language  => '' );
+		$dc->characters($journal);
 		$dc->endTag('dcvalue');
 
 		# Edition country
@@ -498,6 +553,57 @@ sub types {
 
 	return $value;
 
+}
+
+sub check_status {
+	my ($status) = @_;
+
+	my $value;
+
+	if($status == 0){
+		$value = 'submittedVersion';
+	}
+	else{
+		$value = 'publishedVersion';
+	}
+	return $value;
+}
+
+sub check_ref {
+
+	my ($referato) = @_;
+
+	my $value;
+
+	switch($referato){
+
+		case 0	{ $value = 'Sin referato'}
+		case 1	{ $value = 'No informado'}
+		case 2	{ $value = 'Con referato'}
+
+	} 
+	return $value;
+}
+
+sub check_role {
+
+	my ($role) = @_;
+
+	my $value;
+
+	switch($role){
+
+		case 000	{ $value = 'Ninguno' }
+		case 001	{ $value = 'Revisor' }
+		case 010	{ $value = 'Editor/Compilador' }
+		case 011	{ $value = 'Editor/Compilador - Revisor' }
+		case 100	{ $value = 'Autor' }
+		case 101	{ $value = 'Autor - Revisor' }
+		case 110	{ $value = 'Autor - Editor/Compilador' }
+		case 111	{ $value = 'Autor - Editor/Compilador - Revisor' }
+	
+	}
+	return $value;
 }
 
 1;
