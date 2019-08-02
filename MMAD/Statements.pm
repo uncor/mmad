@@ -20,7 +20,7 @@ sub check_type {
 
         case 1 { $stmt = "SELECT p.id AS Produccion, p.produccion AS Titulo, i.idioma AS Idioma, tp.tipo_produccion AS Tipo, 
                           a.link_archivo_fulltext AS Link, a.volumen AS Volumen, a.tomo AS Tomo, a.numero AS Numero, a.pagina_inicial AS Pagina_Inicial,
-                          a.pagina_final AS Pagina_Final, a.web AS URL, a.doi AS DOI, tr.tipo_referato AS Referato, a.publicado AS Publicado, a.issn AS ISSN, a.eissn AS EISSN, a.editorial AS Editorial,
+                          a.pagina_final AS Pagina_Final, a.web AS URL, a.doi AS DOI, tr.tipo_referato AS Referato, a.publicado AS Estado, a.issn AS ISSN, a.eissn AS EISSN, a.editorial AS Editorial,
                           ps.pais AS Pais_Edicion, a.lugar_edicion AS Ciudad_Edicion, a.anio_publica AS Fecha_Publicacion, 
                           concat(per.apellido,', ',per.nombre) AS Creador, pc.palabra_clave AS Palabra_Clave, a.resumen AS Resumen, u.id AS Codigo, u.unidad AS Unidad,
                           cd.campo_disciplinar AS Areas_del_Conocimiento, a.revista AS Revista
@@ -44,6 +44,7 @@ sub check_type {
         
         case 2 { $stmt = "SELECT p.id AS Produccion, p.produccion AS Titulo, i.idioma AS Idioma, l.link_archivo_fulltext AS Link, tp.tipo_produccion AS Tipo, 
                           l.cantidad_volumenes AS Cantidad_Volumenes, l.total_paginas_libro AS Cantidad_Paginas, l.isbn AS ISBN, 
+                          CONCAT (l.is_autor, l.is_editor_compilador, l.is_revisor) AS Rol,
                           ps.pais AS Pais_Edicion, l.lugar_edicion AS Ciudad_Edicion, l.publicado AS Estado, l.referato AS Referato, 
                           l.editorial AS Editorial, l.anio_publica AS Fecha_Publicacion, l.web AS URL, 
                           concat(per.apellido,', ',per.nombre) AS Creador, pc.palabra_clave AS Palabra_Clave, l.resumen AS Resumen, u.id AS Codigo, u.unidad AS Unidad
@@ -65,6 +66,7 @@ sub check_type {
         case 3 { $stmt = "SELECT p.id AS Produccion, p.produccion AS Titulo, i.idioma AS Idioma, tp.tipo_produccion AS Tipo, 
                           cl.link_archivo_fulltext AS Link, cl.numero AS Numero, cl.pagina_inicial AS Pagina_Inicial, cl.pagina_final AS Pagina_Final,
                           cl.isbn AS ISBN, cl.titulo_libro AS Titulo_Libro, cl.tomo AS Tomo, cl.total_paginas_libro AS Total_Paginas, cl.volumen AS Volumen, 
+                          CONCAT(cl.is_autor, cl.is_editor_compilador,cl.is_revisor) AS Rol,
                           ps.pais AS Pais_Edicion, cl.lugar_edicion AS Ciudad_Edicion, cl.publicado AS Estado, cl.referato AS Referato, 
                           cl.editorial AS Editorial, cl.anio_publica AS Fecha_Publicacion, cl.web AS URL, 
                           concat(per.apellido,', ',per.nombre) AS Creador, pc.palabra_clave AS Palabra_Clave, cl.resumen AS Resumen, u.id AS Codigo, u.unidad AS Unidad,
