@@ -10,64 +10,51 @@ use XML::Writer;
 use MMAD::Entities;
 use MMAD::Types;
 
-my ($date, $entity, $type);
-
-my $result = GetOptions(
-    'date=s'    => \$date,
-    'unity=s'   => \$entity,
-    'type=s'    => \$type,
+our @EXPORT = (
+    qw( message_herbarium
+        color_message )
 );
 
-# Options 
+my ($proc, $type, $date);
 
-    my $config      = YAML::LoadFile( 'config.yaml' );
-    my $first_date  = $config->{first_date};
-    my $last_date   = $config->{last_date};
+my $result = GetOptions(
+  
+    'proc=s'    => \$proc,
+    'type=s'    => \$type,
+    'date=s'    => \$date,        
 
-if($date >= $first_date && $date <= $last_date){
-
-    my $ent = entity($entity);
-
-    if($ent) {
-
-        if ($type) {
-            
-            color_message($type);
-            material_types( $type, $date, $entity );
-        }
-        else{
-            print color('red'),"\nType not found. Please choose the correct option\n\n", color('reset'); }
-        }
+);
+    
+    if($type eq('0') && $proc eq('1')){
+        message_herbarium();
+        herbarium();
     }
-else{
-    print color('red'),"\nDate not found. Please choose the correct option\n\n", color('reset');
-    print color('red'),"Migrate process failed...\n\n";
+
+    else{
+        message_memory($proc, $type);
+        material_types($proc, $type);
+    }
+
+sub message_herbarium {
+    print 
+            color('green'), "\nIniciando proceso de migración de ",
+            color('yellow'),"herbario","\n\n", 
+            color('reset');
 }
 
-sub color_message{
+sub message_memory {
 
-    my ($type, $value, $ent) = @_;
+    my ($proc, $type) = @_;
 
-    switch($type){
-        case 1 { $value = "artículos científicos" }
-        case 2 { $value = "libros" }
-        case 3 { $value = "capítulos de libros" }
-        case 4 { $value = "congresos" }
-        case 5 { $value = "tesis" }
-        
-    }
-    
-    if($value){
+    my $p = entity($proc);
+    my $t = types($type);
 
-        $ent = entity($entity);
-    
-        print 
-            color('green'), "\nIniciando proceso de migración de ",
-            color('yellow'),$value, 
-            color('green')," de ", 
-            color('yellow'),$ent," ($date)\n\n",
-            color('reset');
-    }
+    print color('green'), "\nIniciando proceso de migración de ",
+          color('yellow'),$t, 
+          color('green')," de ", 
+          color('yellow'),$p,"\n",
+          color('reset');
+   
 }
 
 1;
