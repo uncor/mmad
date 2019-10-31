@@ -25,27 +25,28 @@ sub generate_xml {
 	my $rights 		= $config->{cc}; 
 	my $rights_uri 	= $config->{cc_uri};
 
-	my $id             = $row->{'Produccion'};
-	my $title          = $row->{'Titulo'};
-	my $abstract       = $row->{'Resumen'};
-	my $creator        = $row->{'Creador'};
-	my $subject        = $row->{'Palabra_Clave'}; 
-	my $language       = $row->{'Idioma'};
-	my $type           = $row->{'Tipo'};
-	my $date           = $row->{'Fecha_Publicacion'};
-	my $description    = $row->{'Unidad'};
-	my $link           = $row->{'Link'};
-	my $academic_grade = $row->{'Grado'};
-	my $advisor        = $row->{'Director'};
-	my $url            = $row->{'URL'};
-	my $referato	   = $row->{'Referato'};
-	my $editorial	   = $row->{'Editorial'};
-		
+	my $id             		= $row->{'id'};
+	my $title          		= $row->{'titulo'};
+	my $abstract            = $row->{'resumen'};
+	my $creator  			= $row->{'autores'};
+	my $subject  			= $row->{'palabras_clave'}; 
+	my $language       		= $row->{'idioma'};
+	my $type           		= $row->{'tipo_produccion'};
+	my $date           		= $row->{'anio'};
+	my $link           		= $row->{'link_archivo_fulltext'};
+	my $academic_grade 		= $row->{'grado_academico'};
+	my $url            		= $row->{'web'};
+	my $editorial	   		= $row->{'editorial'};
+	my $disciplinary_field  = $row->{'area'};
+	my $support 			= $row->{'medios_difusion'};
+
 	my $version;
 	my $ref;
 	my $r;
-	
-	my $desc = "Fil: " . $creator . ". Universidad Nacional de Cordoba. " . $description . ". Cordoba. Argentina.";
+
+	my $referato = check_referato($row);
+
+	#my $desc = "Fil: " . $creator . ". Universidad Nacional de Cordoba. " . $description . ". Cordoba. Argentina.";
 
 	# Check status
 	
@@ -64,20 +65,14 @@ sub generate_xml {
 
 	# Check role & referato
 
-	if($type eq('Libro') | $type eq('Capitulo de Libro')){
+	if( $type eq('Libro') | $type eq('Capitulo de Libro')){
 		
 		my $role = $row->{'Rol'};
 		
 		$role = check_role($role);
-		$ref = check_ref($referato);
 	
 	}
-	else{
-		
-		$ref = $referato;
 	
-	}
-
 	# Encode language
 
 	my $l = encode( "utf-8", $language );
@@ -104,7 +99,7 @@ sub generate_xml {
 	# Abstract
 
 	$dc->startTag( 'dcvalue', element   => 'description', qualifier => 'abstract', language  => $lang2 );
-	$dc->characters($abstract);
+	$dc->characters(StripNonXmlChars($abstract));
 	$dc->endTag('dcvalue');
 
 	# Creative Commons (License)
@@ -120,13 +115,7 @@ sub generate_xml {
 	# Creator
 
 	$dc->startTag( 'dcvalue', element => 'contributor', qualifier => 'author', language => '' );
-	$dc->characters($creator);
-	$dc->endTag('dcvalue');
-
-	# Advisor
-
-	$dc->startTag( 'dcvalue', element => 'contributor', qualifier => 'advisor', language => '' );
-	$dc->characters($advisor);
+	$dc->characters(StripNonXmlChars($creator));
 	$dc->endTag('dcvalue');
 
 	# Date
@@ -137,9 +126,9 @@ sub generate_xml {
 
 	# Filiation
 
-	$dc->startTag( 'dcvalue', element => 'description', qualifier => 'fil', language => $lang2 );
-	$dc->characters($desc);
-	$dc->endTag('dcvalue');
+	# $dc->startTag( 'dcvalue', element => 'description', qualifier => 'fil', language => $lang2 );
+	# $dc->characters($desc);
+	# $dc->endTag('dcvalue');
 
 	# Language
 
@@ -156,7 +145,7 @@ sub generate_xml {
 	# Subject
 
 	$dc->startTag( 'dcvalue', element => 'subject', qualifier => 'none', language => $lang2 );
-	$dc->characters($subject);
+	$dc->characters(StripNonXmlChars($subject));
 	$dc->endTag('dcvalue');
 
 	# Title
@@ -179,31 +168,62 @@ sub generate_xml {
 
 	# URL
 
-	$dc->startTag( 'dcvalue', element => 'url', qualifier => '', language => '' );
+	$dc->startTag( 'dcvalue', element => 'description', qualifier => 'uri', language => '' );
 	$dc->characters($url);
 	$dc->endTag('dcvalue');
 
 	# Referato
 
 	$dc->startTag( 'dcvalue', element => 'journal', qualifier => 'referato', language => '' );
-	$dc->characters($ref);
+	$dc->characters($referato);
 	$dc->endTag('dcvalue');
+
+	# Area
+
+	$dc->startTag( 'dcvalue', element => 'description', qualifier => 'field', language => '' );
+	$dc->characters($disciplinary_field);
+	$dc->endTag('dcvalue');
+
+	# Support
+
+	$dc->startTag( 'dcvalue', element => 'format', qualifier => 'medium', language => '' );
+	$dc->characters($support);
+	$dc->endTag('dcvalue');
+	
+	if($type eq 'Tesis'){
+			
+			my $lastname_advisor    = $row->{'apellido_director'};
+			my $firstname_advisor	= $row->{'nombre_director'};
+			my $advisor = $lastname_advisor . ", " . $firstname_advisor;
+
+			# Advisor
+
+			$dc->startTag( 'dcvalue', element => 'contributor', qualifier => 'advisor', language => '' );
+			$dc->characters($advisor);
+			$dc->endTag('dcvalue');
+			
+	}
 
 	# Others
 
 	if ( $type eq ("Articulo") ) {
 
-		my $volume             = $row->{'Volumen'};
-		my $tome               = $row->{'Tomo'};
-		my $first_page         = $row->{'Pagina_Inicial'};
-		my $last_page          = $row->{'Pagina_Final'};
-		my $doi                = $row->{'DOI'};
-		my $issn               = $row->{'ISSN'};
-		my $eissn              = $row->{'EISSN'};
-		my $country            = $row->{'Pais_Edicion'};
-		my $city               = $row->{'Ciudad_Edicion'};
-		my $disciplinary_field = $row->{'Areas_del_Conocimiento'};
-		my $journal            = $row->{'Revista'};
+		my $volume             = $row->{'Volumen_articulo'};
+		my $tome               = $row->{'Tomo_articulo'};
+		my $first_page         = $row->{'Pagina_inicial_articulo'};
+		my $last_page          = $row->{'Pagina_final_articulo'};
+		my $doi                = $row->{'DOI_articulo'};
+		my $issn               = $row->{'ISSN_articulo'};
+		my $eissn              = $row->{'EISSN_articulo'};
+		my $country            = $row->{'pais'};
+		my $city               = $row->{'ciudad'};
+		my $journal			   = $row->{'revista'};
+
+		if (!($journal)){
+			$journal = $row->{'otra_revista'};
+		}	
+		
+		
 		
 		my $pagination;
 
@@ -261,7 +281,7 @@ sub generate_xml {
 
 		# DOI
 
-		$dc->startTag( 'dcvalue', element => 'journal', qualifier => 'doi', language => '' );
+		$dc->startTag( 'dcvalue', element => 'identifier', qualifier => 'uri', language => '' );
 		$dc->characters($doi);
 		$dc->endTag('dcvalue');
 
@@ -509,7 +529,10 @@ sub lang {
 		case "Español"   { $value = "spa" }
 		case "Inglés"    { $value = "eng" }
 		case "Portugués" { $value = "por" }
-		else             { $value = "undefined" }
+		case "Alemán"	 { $value = "deu" }
+		case "Francés"   { $value = "fra" }
+		case "Italiano"  { $value = "ita"}		
+		else             { $value = "N/D" }
 
 	}
 
@@ -527,7 +550,11 @@ sub lang2 {
 
 		case "spa"	{ $value = "es" }
 		case "eng" 	{ $value = "en" }
-		else 	   	{ $value = "undefined" }
+		case "por"	{ $value = "por" }
+		case "deu" 	{ $value = "deu" }
+		case "fra"  { $value = "fr" }
+		case "ita"  { $value = "it" }		
+		else 	   	{ $value = "N/A" }
 	}
 
 	return $value;
@@ -544,7 +571,7 @@ sub types {
 
 		case "Articulo"          { $value = "article" }
 		case "Capitulo de Libro" { $value = "bookPart" }
-		case "Conferencia"       { $value = "conferenceObject" }
+		case "Congreso"      	 { $value = "conferenceObject" }
 		case "Libro"             { $value = "book" }
 		case "Tesis"             { $value = "bachelorThesis" }
 		else                     { $value = "" }
@@ -605,5 +632,32 @@ sub check_role {
 	}
 	return $value;
 }
+
+sub check_referato {
+		my ($row) = @_;
+
+		my ($ref, $value);
+
+		switch ($row->{'tipo_produccion'}) {
+
+			case 'Articulo'				{ $value = $row->{'Referato_articulo'} }
+			case 'Libro'				{ $value = $row->{'Referato_libro'}	}
+			case 'Capitulo de Libro'	{ $value = $row->{'Referato_capitulo'} }
+		}
+
+		$ref = check_ref($value);
+
+		return $ref;
+}
+
+sub StripNonXmlChars {
+    my $str = shift;
+    if (!defined($str) || $str eq ""){
+        return "";
+    }
+    $str =~ s/[^\x09\x0A\x0D\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]//g;
+    return $str;
+}
+
 
 1;
