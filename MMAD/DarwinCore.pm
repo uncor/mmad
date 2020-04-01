@@ -17,10 +17,11 @@ sub generate_dwc {
 
 	my ($row) = @_;
 
-	my $family      = $row->{'family'}; 
-    my $catalogNum  = $row->{'catalogNumber'}; 
-    
-    my $language   = 'spa';
+	my $family       = $row->{'family'}; 
+        my $catalogNum   = $row->{'catalogNumber'}; 
+    	my $identifiedBy = $row->{'identifiedBy'};
+	my $recordedBy   = $row->{'recordedBy'};
+        my $language   = 'spa';
    	my $lang = lang($language);
 
 	# Dublin Core XML
@@ -45,6 +46,18 @@ sub generate_dwc {
 	$dwc->startTag( 'dcvalue', element => 'catalogNumber', qualifier => '', language => $lang );
 	$dwc->characters($catalogNum);
 	$dwc->endTag('dcvalue');
+
+	# identifiedBy
+
+        $dwc->startTag( 'dcvalue', element => 'identifiedBy', qualifier => '', language => $lang );
+        $dwc->characters($identifiedBy . ' [Determiner]');
+        $dwc->endTag('dcvalue');
+
+	# recordedBy
+	
+	$dwc->startTag( 'dcvalue', element => 'recordedBy', qualifier => '', language => $lang );
+        $dwc->characters($recordedBy . ' [Collector]');
+        $dwc->endTag('dcvalue');
 
 	$dwc->endTag('dublin_core');
 
