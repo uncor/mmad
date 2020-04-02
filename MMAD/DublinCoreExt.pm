@@ -15,22 +15,22 @@ our @EXPORT = (
 
 sub generate_dc {
 
-	my ($row) = @_;
+    my ($row) = @_;
 
-	my $config   	= YAML::LoadFile( 'config.yaml' );
-	my $rights 		= $config->{cc}; 
-	my $rights_uri 	= $config->{cc_uri};
+    my $config      = YAML::LoadFile( 'config.yaml' );
+    my $rights 	    = $config->{cc}; 
+    my $rights_uri  = $config->{cc_uri};
 
-	my $title       = $row->{'previousIdentifications'}; # agregar dc.title
+    my $title       = $row->{'scientificName'}; # agregar dc.title, dc.subject
     my $abstract    = $row->{'locality'};
     my $collector   = $row->{'recordedBy'}; # dc.contributor.author
     my $cataloger   = $row->{'identifiedBy'}; # dc.contributor.author
     my $loc         = $row->{'higherGeography'}; # dc.coverage.spacial
+    my $class 	    = $row->{'class'};
     my $order       = $row->{'orders'}; # dc.subject
     my $family      = $row->{'family'}; # dc.subject
-    my $name        = $row->{'scientificName'}; # dc.subject
-	my $uri			= $row->{'uri'}; #dc.identifier.uri
-    
+    my $uri			= $row->{'url'}; #dc.identifier.uri
+
     # Date
 
     my $year        = $row->{'years'};
@@ -39,7 +39,7 @@ sub generate_dc {
     
     # Subject
 
-    my $subject     = $order . "; " . $family . "; " . $name;
+    my $subject     = $class . "; " . $order . "; " . $family;
 
     # Add
     
@@ -51,101 +51,108 @@ sub generate_dc {
     my $version     = 'publishedVersion';
     
     my $language    = 'spa';
-	my $lang        = lang($language);
+    my $lang        = lang($language);
 
-	# Dublin Core XML
+    # Dublin Core XML
 
-	my $dc = XML::Writer->new(
-		OUTPUT      => 'self',
-		DATA_MODE   => 1,
-		DATA_INDENT => 2,
-	);
+    my $dc = XML::Writer->new(
+	OUTPUT      => 'self',
+	DATA_MODE   => 1,
+	DATA_INDENT => 2,
+     );
 
-	$dc->xmlDecl( 'UTF-8', 'no' );
-	$dc->startTag( 'dublin_core', schema => 'dc' );
+     $dc->xmlDecl( 'UTF-8', 'no' );
+     $dc->startTag( 'dublin_core', schema => 'dc' );
 
-	# Abstract
+     # Abstract
 
-	$dc->startTag( 'dcvalue', element   => 'description', qualifier => 'abstract', language  => $lang );
-	$dc->characters($abstract);
-	$dc->endTag('dcvalue');
+     $dc->startTag( 'dcvalue', element   => 'description', qualifier => 'abstract', language  => $lang );
+     $dc->characters($abstract);
+     $dc->endTag('dcvalue');
 
-	# Creative Commons (License)
+     
+     #  Creative Commons (License)
 
-	$dc->startTag( 'dcvalue', element => 'rights', qualifier => 'none', language => '*' );
-	$dc->characters($rights);
-	$dc->endTag;
+     $dc->startTag( 'dcvalue', element => 'rights', qualifier => 'none', language => '*' );
+     $dc->characters($rights);
+     $dc->endTag;
 
-	$dc->startTag( 'dcvalue', element => 'rights', qualifier => 'uri', language => '*' );
-	$dc->characters($rights_uri);
-	$dc->endTag;
+     $dc->startTag( 'dcvalue', element => 'rights', qualifier => 'uri', language => '*' );
+     $dc->characters($rights_uri);
+     $dc->endTag;
 
-	# Creator
+     # Creator
 
-	$dc->startTag( 'dcvalue', element => 'contributor', qualifier => 'author', language => '' );
-	$dc->characters($collector . " [Collector]; " . $cataloger . " [Cataloger]");
-	$dc->endTag('dcvalue');
+     $dc->startTag( 'dcvalue', element => 'contributor', qualifier => 'author', language => '' );
+     $dc->characters($collector . " [Collector]; " . $cataloger . " [Cataloger]");
+     $dc->endTag('dcvalue');
 
-	# Date
+     # Coverage
 
-	$dc->startTag( 'dcvalue', element => 'date', qualifier => 'issued', language => '' );
-	$dc->characters($year . "-" . $month . "-" . $day);
-	$dc->endTag('dcvalue');
+     $dc->startTag( 'dcvalue', element => 'coverage', qualifier => 'spatial', language => '' );
+     $dc->characters($loc);
+     $dc->endTag('dcvalue');
 
-	# Identifier URI
+     # Date
 
-	$dc->startTag( 'dcvalue', element => 'identifier', qualifier => 'uri', language => '' );
-	$dc->characters($uri);
-	$dc->endTag('dcvalue');
+     $dc->startTag( 'dcvalue', element => 'date', qualifier => 'issued', language => '' );
+     $dc->characters($year . "-" . $month . "-" . $day);
+     $dc->endTag('dcvalue');
 
-	# Language
+     # Identifier URI
 
-	$dc->startTag( 'dcvalue', element => 'language', qualifier => 'iso', language => $lang );
-	$dc->characters($language);
-	$dc->endTag('dcvalue');
+     $dc->startTag( 'dcvalue', element => 'identifier', qualifier => 'uri', language => '' );
+     $dc->characters($uri);
+     $dc->endTag('dcvalue');
 
-	# Publisher
+     # Language
 
-	$dc->startTag( 'dcvalue', element => 'publisher', qualifier => 'none', language => '' );
-	$dc->characters( $publisher );
-	$dc->endTag('dcvalue');
+     $dc->startTag( 'dcvalue', element => 'language', qualifier => 'iso', language => $lang );
+     $dc->characters($language);
+     $dc->endTag('dcvalue');
 
-	# Subject
+     # Publisher
 
-	$dc->startTag( 'dcvalue', element => 'subject', qualifier => 'none', language => $lang );
-	$dc->characters($subject);
-	$dc->endTag('dcvalue');
+     $dc->startTag( 'dcvalue', element => 'publisher', qualifier => 'none', language => '' );
+     $dc->characters( $publisher );
+     $dc->endTag('dcvalue');
 
-	# Title
+     # Subject
 
-	$dc->startTag( 'dcvalue', element => 'title', qualifier => 'none', language => $lang );
-	$dc->characters($title);
-	$dc->endTag('dcvalue');
+     $dc->startTag( 'dcvalue', element => 'subject', qualifier => 'none', language => $lang );
+     $dc->characters($subject);
+     $dc->endTag('dcvalue');
 
-	# Type
+     # Title
 
-	$dc->startTag( 'dcvalue', element => 'type', qualifier => 'none', language => $lang );
-	$dc->characters($type);
-	$dc->endTag('dcvalue');
+     $dc->startTag( 'dcvalue', element => 'title', qualifier => 'none', language => $lang );
+     $dc->characters($title);
+     $dc->endTag('dcvalue');
 
-	# Version
+     # Type
 
-	$dc->startTag( 'dcvalue', element => 'description', qualifier => 'version', language => '' );
-	$dc->characters($version);
-	$dc->endTag('dcvalue');
+     $dc->startTag( 'dcvalue', element => 'type', qualifier => 'none', language => $lang );
+     $dc->characters($type);
+     $dc->endTag('dcvalue');
 
-	$dc->endTag('dublin_core');
+     # Version
 
-	my $xml = $dc->end();
+     $dc->startTag( 'dcvalue', element => 'description', qualifier => 'version', language => '' );
+     $dc->characters($version);
+     $dc->endTag('dcvalue');
 
-	return $xml;
+     $dc->endTag('dublin_core');
+
+     my $xml = $dc->end();
+
+     return $xml;
 }
 
 sub lang {
 
-	my ($lang) = @_;
+    my ($lang) = @_;
 
-	my $value;
+    my $value;
 
 	switch ($lang) {
 
@@ -158,4 +165,8 @@ sub lang {
 
 }
 
+sub code_coverage {
+
+	my $list = ()
+}
 1;
