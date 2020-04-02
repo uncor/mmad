@@ -50,7 +50,7 @@ sub generate_xml {
 
 	# Check status
 	
-	if($type eq('Articulo') | $type eq('Capitulo de Libro') | $type eq('Libro')){
+	if($type eq('Articulo')){
 		
 		my $status = $row->{'Estado'};
 		
@@ -67,9 +67,7 @@ sub generate_xml {
 
 	if( $type eq('Libro') | $type eq('Capitulo de Libro')){
 		
-		my $role = $row->{'Rol'};
-		
-		$role = check_role($role);
+		$r = check_role($row);
 	
 	}
 	
@@ -151,7 +149,7 @@ sub generate_xml {
 	# Title
 
 	$dc->startTag( 'dcvalue', element => 'title', qualifier => 'none', language => $lang2 );
-	$dc->characters($title);
+	$dc->characters(StripNonXmlChars($title));
 	$dc->endTag('dcvalue');
 
 	# Type
@@ -194,6 +192,7 @@ sub generate_xml {
 			
 			my $lastname_advisor    = $row->{'apellido_director'};
 			my $firstname_advisor	= $row->{'nombre_director'};
+
 			my $advisor = $lastname_advisor . ", " . $firstname_advisor;
 
 			# Advisor
@@ -222,8 +221,6 @@ sub generate_xml {
 		if (!($journal)){
 			$journal = $row->{'otra_revista'};
 		}	
-		
-		
 		
 		my $pagination;
 
@@ -293,11 +290,11 @@ sub generate_xml {
 
 	if ( $type eq ("Libro") ) {
 
-		my $volumes   = $row->{'Cantidad_Volumenes'},
-		my $pages     = $row->{'Cantidad_Paginas'},
-		my $isbn      = $row->{'ISBN'},
-		my $country   = $row->{'Pais_Edicion'},
-		my $city      = $row->{'Ciudad_Edicion'},
+		my $volumes   	= $row->{'cantidad_volumenes'};
+		my $isbn        = $row->{'ISBN_Libro'};
+		my $country  	= $row->{'pais'};
+		my $city     	= $row->{'ciudad'};
+		my $pages_libro = $row->{'total_paginas_libro_1'}; 
 
 		# Total volumes
 
@@ -308,7 +305,7 @@ sub generate_xml {
 		# Pages
 
 		$dc->startTag( 'dcvalue', element => 'book', qualifier => 'pages', language => '' );
-		$dc->characters($pages);
+		$dc->characters($pages_libro);
 		$dc->endTag('dcvalue');
 
 		# Edition country
@@ -345,20 +342,20 @@ sub generate_xml {
 
 	if ( $type eq ("Capitulo de Libro") ) {
 
-		my $volume      = $row->{'Volumen'},
-		my $number      = $row->{'Numero'},
-		my $first_page  = $row->{'Pagina_Inicial'},
-		my $last_page   = $row->{'Pagina_Final'},
-		my $isbn        = $row->{'ISBN'},
-		my $other_title = $row->{'Titulo_Libro'},
-		my $tome        = $row->{'Tomo'},
-		my $pages       = $row->{'Total_Paginas'},
-		my $country     = $row->{'Pais_Edicion'},
-		my $city        = $row->{'Ciudad_Edicion'},
+		my $volume      = $row->{'volumen'},
+		my $number      = $row->{'numero'},
+		my $first_page  = $row->{'pagina_inicial'},
+		my $last_page   = $row->{'pagina_final'},
+		my $isbn        = $row->{'ISBN_parte'},
+		my $other_title = $row->{'titulo_libro'},
+		my $tome        = $row->{'tomo'},
+		my $pages       = $row->{'total_paginas_libro'},
+		my $country     = $row->{'pais'},
+		my $city        = $row->{'ciudad'},
 
-		# Alternative title
+	    # Alternative title
 
-		$dc->startTag( 'dcvalue', element   => 'title', qualifier => 'alternative', language  => $lang2 );
+		$dc->startTag( 'dcvalue', element   => 'book', qualifier => 'title', language  => $lang2 );
 		$dc->characters($other_title);
 		$dc->endTag('dcvalue');
 
@@ -432,17 +429,19 @@ sub generate_xml {
 
 	if ( $type eq ("Congreso") ) {
 
-		my $publication_type = $row->{'Tipo_Publicacion'};
-		my $work_type        = $row->{'Tipo_Trabajo'};
-		my $journal          = $row->{'Revista'};
-		my $country          = $row->{'Pais_Edicion'};
-		my $city             = $row->{'Ciudad_Edicion'};
-		my $event            = $row->{'Evento'};
-		my $event_type       = $row->{'Tipo_Evento'};
-		my $event_country    = $row->{'Pais_Evento'};
-		my $event_city       = $row->{'Ciudad_Evento'};
-		my $event_date       = $row->{'Fecha_Evento'};
-		my $institution      = $row->{'Institucion_Organizadora'};
+		my $publication_type = $row->{'tipo_publicacion'};
+		my $work_type        = $row->{'tipo_trabajo'};
+		my $journal          = $row->{'titulo_revista'};
+		my $country          = $row->{'pais'};
+		my $city             = $row->{'ciudad'};
+		my $event            = $row->{'reunion_cientifica'};
+		my $event_type       = $row->{'tipo_reunion'};
+		my $event_country    = $row->{'pais_evento'};
+		my $event_city       = $row->{'ciudad_evento'};
+		my $event_year       = $row->{'anio_reunion'};
+		my $event_mounth	 = $row->{'mes_reunion'};
+		my $institution      = $row->{'institucion_organizadora'};
+		my $issn_isbn		 = $row->{'isbn_issn'};
 
 		# Publication type
 
@@ -459,7 +458,7 @@ sub generate_xml {
 		# Journal
 
 		$dc->startTag( 'dcvalue', element   => 'conference', qualifier => 'journal', language  => '' );
-		$dc->characters($journal);
+		$dc->characters(StripNonXmlChars($journal));
 		$dc->endTag('dcvalue');
 
 		# Edition country
@@ -483,7 +482,14 @@ sub generate_xml {
 		# Event
 
 		$dc->startTag( 'dcvalue', element => 'conference', qualifier => 'event', language => '' );
-		$dc->characters($event);
+		$dc->characters(StripNonXmlChars($event));
+		$dc->endTag('dcvalue');
+
+
+		# Event type
+
+		$dc->startTag( 'dcvalue', element => 'conference', qualifier => 'type', language => '' );
+		$dc->characters($event_type);
 		$dc->endTag('dcvalue');
 
 		# Event country
@@ -501,7 +507,7 @@ sub generate_xml {
 		# Event date
 
 		$dc->startTag( 'dcvalue', element   => 'conference', qualifier => 'eventdate', language  => '' );
-		$dc->characters($event_date);
+		$dc->characters($event_year . '-' . $event_mounth);
 		$dc->endTag('dcvalue');
 
 		# Institution
@@ -509,6 +515,17 @@ sub generate_xml {
 		$dc->startTag( 'dcvalue', element   => 'conference', qualifier => 'institution', language  => '' );
 		$dc->characters($institution);
 		$dc->endTag('dcvalue');
+
+		# ISSN-ISBN
+
+		$dc->startTag( 'dcvalue', element   => 'identifier', qualifier => 'issn', language  => '' );
+		$dc->characters($issn_isbn);
+		$dc->endTag('dcvalue');
+
+		$dc->startTag( 'dcvalue', element   => 'identifier', qualifier => 'isbn', language  => '' );
+		$dc->characters($issn_isbn);
+		$dc->endTag('dcvalue');
+
 	}
 
 	$dc->endTag('dublin_core');
@@ -614,22 +631,29 @@ sub check_ref {
 
 sub check_role {
 
-	my ($role) = @_;
+	my ($row) = @_;
+	
+	my ($role, $value);
 
-	my $value;
+	my $is_author 		= $row->{'es_autor'};
+	my $is_editor_comp 	= $row->{'es_editor_compilador'};
+	my $is_revisor 		= $row->{'es_revisor'};
+
+	$role = $is_author . $is_editor_comp . $is_revisor;
 
 	switch($role){
 
-		case 000	{ $value = 'Ninguno' }
-		case 001	{ $value = 'Revisor' }
-		case 010	{ $value = 'Editor/Compilador' }
-		case 011	{ $value = 'Editor/Compilador - Revisor' }
-		case 100	{ $value = 'Autor' }
-		case 101	{ $value = 'Autor - Revisor' }
-		case 110	{ $value = 'Autor - Editor/Compilador' }
-		case 111	{ $value = 'Autor - Editor/Compilador - Revisor' }
+		case '000'	{ $value = 'Ninguno' }
+		case '001'	{ $value = 'Revisor' }
+		case '010'	{ $value = 'Editor/Compilador' }
+		case '011'	{ $value = 'Editor/Compilador - Revisor' }
+		case '100'	{ $value = 'Autor' }
+		case '101'	{ $value = 'Autor - Revisor' }
+		case '110'	{ $value = 'Autor - Editor/Compilador' }
+		case '111'	{ $value = 'Autor - Editor/Compilador - Revisor' }
 	
 	}
+	
 	return $value;
 }
 
@@ -659,5 +683,12 @@ sub StripNonXmlChars {
     return $str;
 }
 
-
+sub check {
+	my ($args) = @_;
+	if(!$args){
+		print "Not found\n";
+	}
+	
+	return $args;
+}
 1;
