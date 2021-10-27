@@ -295,14 +295,14 @@ sub check_type {
                 -- LIBRO
  
                 prlib.cantidad_volumenes,
-                prlib.total_paginas_libro,
-                prlib.isbn,
+                prlib.total_paginas_libro AS total_paginas_libro_1,
+                prlib.isbn AS ISBN_Libro,
                 prlib.referato AS Referato_libro, -- NUEVO
                 
                 -- PARTE LIBRO
  
                 tpl.tipo_parte_libro,
-                prcap.isbn,
+                prcap.isbn AS ISBN_parte,
                 prcap.titulo_libro,
                 prcap.pagina_inicial,
                 prcap.pagina_final,
@@ -456,10 +456,17 @@ sub herbarium_stmt {
 
         my $stmt;
 
-        $stmt = "SELECT * FROM herbarium.tipos";
+        $stmt = "SELECT * FROM herbarium.tipos LIMIT 2";
 
         return $stmt;
 }
+
+# sub rdu_stmt {
+        
+#         my $stmt;
+#         $stmt = "SELECT * FROM suquia.tipos";
+
+# }
                         
 1;
 

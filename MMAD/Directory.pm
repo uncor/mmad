@@ -21,6 +21,13 @@ sub create_directory {
 
     my ($row, $date) = @_;
 
+    # my($result, $date) = @_;
+    
+    # my $id   = $result->{'id'};
+    # my $type = $result->{'tipo_produccion'};
+    # my $link = $result->{'link_archivo_fulltext'};
+    # 
+
     my $src;
     my $id      = $row->{'id'};
     my $type    = $row->{'tipo_produccion'};
@@ -104,8 +111,8 @@ sub create_directory_herbarium {
     open( my $fh2, ">:encoding(UTF-8)", "$catalogue/metadata_dwc.xml")
         or die "Can't save > metadata_dwc.xml: $!";
     
-    open( my $fh3, ">:encoding(UTF-8)", "$catalogue/darwin_core.txt")
-        or die "Can't save > dwc.txt: $!";
+    #open( my $fh3, ">:encoding(UTF-8)", "$catalogue/darwin_core.txt")
+    #    or die "Can't save > dwc.txt: $!";
 
 
     # License txt
@@ -123,7 +130,7 @@ sub create_directory_herbarium {
 
     create_content( $catalogue, $file_name );
 
-    return ($fh1, $fh2, $fh3);
+    return ($fh1, $fh2);
     
 }
 
@@ -138,7 +145,7 @@ sub create_content {
     open( my $contents, ">:encoding(UTF-8)", "$folder/contents" )
         or die "Can't save > content: $!";
 
-    print $contents( $original, $license, $text );
+    print $contents( $original, $license );
 
 }
 

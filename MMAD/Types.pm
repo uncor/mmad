@@ -14,6 +14,9 @@ use MMAD::Statements;
 use Term::ANSIColor;
 use Encode;
 
+
+use LWP::UserAgent ();
+
 our @EXPORT = (
     qw( material_types 
         herbarium )
@@ -25,7 +28,21 @@ sub material_types {
 	
     #my ( $type, $date, $entity ) = @_;
 
-    my ( $proc, $type, $date ) = @_; 
+    my ( $proc, $type, $date ) = @_;
+    
+    # my (@decoded_json, $date) = @_;
+    #
+    # foreach my $result (@decoded_json){
+    # 
+    # 	my ($fh, $xml);
+    #
+    # 	$fh  = create_directory($result, $date);
+    # 	$xml = generate_xml($result);
+    #	print $fh $xml;
+    #
+    # }
+
+
 
     my $dbh = connect_db();
 
@@ -40,7 +57,7 @@ sub material_types {
         while ( my $row = $sth->fetchrow_hashref ){
 
             my ($fh, $xml);
-            
+                        
             $fh = create_directory($row, $date);
             
             $xml = generate_xml($row);
@@ -120,6 +137,7 @@ sub herbarium {
                          "typeStatus: ",                    $row->{'typeStatus'},"\n",
                          "establishmentMeans: ",            $row->{'establishmentMeans'},"\n"
                         );
+		close ($fh1,$fh2,$fh3);	
 
         }
 

@@ -513,7 +513,7 @@ sub generate_xml {
 		# Institution
 
 		$dc->startTag( 'dcvalue', element   => 'conference', qualifier => 'institution', language  => '' );
-		$dc->characters($institution);
+		$dc->characters(StripNonXmlChars($institution));
 		$dc->endTag('dcvalue');
 
 		# ISSN-ISBN
